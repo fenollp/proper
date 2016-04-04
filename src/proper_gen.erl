@@ -340,26 +340,6 @@ alt_gens(Type) ->
 
 %% @private
 -spec clean_instance(imm_instance()) -> instance().
--ifdef(AT_LEAST_17).
-clean_instance({'$used',_ImmParts,ImmInstance}) ->
-    clean_instance(ImmInstance);
-clean_instance({'$to_part',ImmInstance}) ->
-    clean_instance(ImmInstance);
-clean_instance(ImmInstance) ->
-    if
-        is_list(ImmInstance) ->
-            %% CAUTION: this must handle improper lists
-            proper_arith:safe_map(fun clean_instance/1, ImmInstance);
-        is_tuple(ImmInstance) ->
-            proper_arith:tuple_map(fun clean_instance/1, ImmInstance);
-        is_map(ImmInstance) ->
-            maps:from_list(
-              proper_arith:safe_map(fun clean_instance/1, maps:to_list(ImmInstance))
-             );
-        true ->
-            ImmInstance
-    end.
--else.
 clean_instance({'$used',_ImmParts,ImmInstance}) ->
     clean_instance(ImmInstance);
 clean_instance({'$to_part',ImmInstance}) ->
@@ -374,7 +354,6 @@ clean_instance(ImmInstance) ->
         true ->
             ImmInstance
     end.
--endif.
 
 
 %%-----------------------------------------------------------------------------
