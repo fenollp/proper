@@ -287,18 +287,6 @@ keep_shrinking(ImmInstance, Acc, Type, State) ->
     end.
 
 -spec contains_fun(term()) -> boolean().
--ifdef(AT_LEAST_17).
-contains_fun(List) when is_list(List) ->
-    proper_arith:safe_any(fun contains_fun/1, List);
-contains_fun(Tuple) when is_tuple(Tuple) ->
-    contains_fun(tuple_to_list(Tuple));
-contains_fun(Map) when is_map(Map) ->
-    contains_fun(maps:to_list(Map));
-contains_fun(Fun) when is_function(Fun) ->
-    true;
-contains_fun(_Term) ->
-    false.
--else.
 contains_fun(List) when is_list(List) ->
     proper_arith:safe_any(fun contains_fun/1, List);
 contains_fun(Tuple) when is_tuple(Tuple) ->
@@ -307,7 +295,6 @@ contains_fun(Fun) when is_function(Fun) ->
     true;
 contains_fun(_Term) ->
     false.
--endif.
 
 
 %%-----------------------------------------------------------------------------
