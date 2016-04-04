@@ -287,6 +287,18 @@ keep_shrinking(ImmInstance, Acc, Type, State) ->
     end.
 
 -spec contains_fun(term()) -> boolean().
+-ifdef(AT_LEAST_17).
+contains_fun(List) when is_list(List) ->
+    proper_arith:safe_any(fun contains_fun/1, List);
+contains_fun(Tuple) when is_tuple(Tuple) ->
+    contains_fun(tuple_to_list(Tuple));
+contains_fun(Map) when is_map(Map) ->
+    contains_fun(maps:to_list(Map));
+contains_fun(Fun) when is_function(Fun) ->
+    true;
+contains_fun(_Term) ->
+    false.
+-else.
 contains_fun(List) when is_list(List) ->
     proper_arith:safe_any(fun contains_fun/1, List);
 contains_fun(Tuple) when is_tuple(Tuple) ->
@@ -295,6 +307,7 @@ contains_fun(Fun) when is_function(Fun) ->
     true;
 contains_fun(_Term) ->
     false.
+-endif.
 
 
 %%-----------------------------------------------------------------------------
@@ -327,6 +340,26 @@ alt_gens(Type) ->
 
 %% @private
 -spec clean_instance(imm_instance()) -> instance().
+-ifdef(AT_LEAST_17).
+clean_instance({'$used',_ImmParts,ImmInstance}) ->
+    clean_instance(ImmInstance);
+clean_instance({'$to_part',ImmInstance}) ->
+    clean_instance(ImmInstance);
+clean_instance(ImmInstance) ->
+    if
+	is_list(ImmInstance) ->
+	    %% CAUTION: this must handle improper lists
+	    proper_arith:safe_map(fun clean_instance/1, ImmInstance);
+	is_tuple(ImmInstance) ->
+	    proper_arith:tuple_map(fun clean_instance/1, ImmInstance);
+        is_map(ImmInstance) ->
+            maps:from_list(
+              proper_arith:safe_map(fun clean_instance/1, maps:to_list(ImmInstance))
+             );
+	true ->
+	    ImmInstance
+    end.
+-else.
 clean_instance({'$used',_ImmParts,ImmInstance}) ->
     clean_instance(ImmInstance);
 clean_instance({'$to_part',ImmInstance}) ->
@@ -341,6 +374,7 @@ clean_instance(ImmInstance) ->
 	true ->
 	    ImmInstance
     end.
+-endif.
 
 
 %%-----------------------------------------------------------------------------
