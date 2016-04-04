@@ -302,7 +302,7 @@ symb_walk_gen(VarValues, SymbTerm,
     HandleTerm(Term).
 
 -spec symb_walk_gen_term(symb_term(), term_handler()) -> handled_term().
--ifdef(maps_support).
+-ifdef(AT_LEAST_17).
 symb_walk_gen_term(SymbTerm, SymbWalk) when is_list(SymbTerm) ->
     proper_arith:safe_map(SymbWalk, SymbTerm);
 symb_walk_gen_term(SymbTerm, SymbWalk) when is_tuple(SymbTerm) ->
