@@ -26,15 +26,17 @@
 
 -include_lib("proper/include/proper.hrl").
 
--record(state, {foo = [],
-		bar = []}).
+-record(state, {foo = []
+               ,bar = []
+               }).
 
 initial_state() ->
     #state{}.
 
 command(_S) ->
-    oneof([{call,?MODULE,foo,[integer()]},
-	   {call,?MODULE,bar,[integer()]}]).
+    oneof([{call,?MODULE,foo,[integer()]}
+          ,{call,?MODULE,bar,[integer()]}
+          ]).
 
 precondition(_, _) ->
     true.
@@ -49,7 +51,7 @@ next_state(S = #state{bar=Bar}, V, {call,_,bar,[_Arg]}) ->
 postcondition(S, {call,_,foo,[_Arg]}, Res) when is_tuple(Res) ->
     lists:all(fun is_integer/1, S#state.foo);
 postcondition(S, {call,_,bar,[_Arg]}, Res) when is_list(Res) ->
-    lists:all(fun is_integer/1, S#state.bar);
+    lists:all(fun is_integer/1, S#state.foo);
 postcondition(_, _, _) ->
     false.
 
