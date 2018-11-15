@@ -31,7 +31,7 @@
 -include("proper.hrl").
 
 -include_lib("eunit/include/eunit.hrl").
-
+-export([g/0, g/2, g/1]).
 
 %%------------------------------------------------------------------------------
 %% Helper macros
@@ -898,6 +898,55 @@ true_props_test_() ->
 map_in_nextstate3_test_() ->
     [?_passes(symb_statem_maps:prop_simple()),
      {timeout, 20, ?_passes(symb_statem_maps:prop_parallel_simple())}].
+
+pick_properties(Count, Map) ->
+    pick_properties(Count, Map, #{}).
+pick_properties(0, _, Picked) -> Picked;
+pick_properties(Count, Map, Picked) ->
+    ?LAZY(
+       ?LET(Key, proper_types:union(maps:keys(Map))
+           ,begin
+                {Value,NewMap} = maps:take(Key, Map),
+                pick_properties(Count - 1, NewMap, Picked#{Key => Value})
+            end
+           )).
+
+gen_object(Defs, MinOpts, Opt, Req) ->
+    %% Gen = fun (_,Schema) -> generator(Schema, Defs) end,
+    Gen = fun (_,Schema) -> Schema end,
+    ?LET(Count, integer(MinOpts, map_size(Opt))
+        ,?LET(OptionalPicked
+             ,pick_properties(Count, Opt)
+             ,maps:map(Gen, maps:merge(Req, OptionalPicked))
+             )
+        ).
+
+g(_) ->
+    gen_object(#{}, 2, #{a=>a, b=>b, c=>c, d=>d, e=>e}, #{1=>1,2=>2,3=>3}).
+
+g() ->
+    ?LET(Count, integer(1,5), [g(Count, #{}),42]).
+g(0, Acc) -> Acc;
+g(N, Acc) ->
+    ?LAZY(
+       ?LET(I, integer()
+           ,?LET(A, elements([a,b,c,d,e,f])
+                ,begin
+                     Acc1 = pick_properties(2, Acc),
+                     Acc2 = Acc1#{A => I, <<"k">> => I},
+                     g(N - 1, Acc2)
+                 end
+                )
+           )
+      ).
+
+containing_fixed_map_test_() ->
+    Getter =
+        fun Getter ([F|_]) -> Getter(F);
+            Getter (#{<<"k">> := M=#{}}) -> Getter(M);
+            Getter (#{<<"k">> := V}) -> V
+        end,
+    [?_passes(?FORALL(X, g(), is_integer(Getter(X))))].
 
 false_props_test_() ->
     [?_failsWith([[_Same,_Same]],
